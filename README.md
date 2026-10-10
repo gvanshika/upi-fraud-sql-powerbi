@@ -63,9 +63,9 @@ remaining 50 frauds.
 4. Open the .pbix file in Power BI Desktop.
 
 ## Repository contents
-- sql/ : MySQL queries, one file per day of analysis
-- notes/ : analysis notes and the rule comparison spreadsheet
-- power bi/ : dashboard (.pbix), screenshot and the small CSV extracts it uses
+- SQL/ : MySQL queries, one file per day of analysis
+- Notes/ : analysis notes and the rule comparison spreadsheet
+- Power bi/ : dashboard (.pbix), screenshot and the small CSV extracts it uses
 
 ## Tools
 MySQL Workbench, Excel, Power BI Desktop
