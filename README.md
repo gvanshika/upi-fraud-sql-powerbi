@@ -56,6 +56,12 @@ remaining 50 frauds.
   assumes all caught fraud value is saved.
 - The dataset has no currency, so amounts are in its own units.
 
+## How to reproduce
+1. Download the PaySim dataset from Kaggle.
+2. Run SQL/day1_setup.sql in MySQL Workbench (set the file path in the load step).
+3. Run the other SQL files in order (day 2 to day 7).
+4. Open the .pbix file in Power BI Desktop.
+
 ## Repository contents
 - sql/ : MySQL queries, one file per day of analysis
 - notes/ : analysis notes and the rule comparison spreadsheet
@@ -66,4 +72,3 @@ MySQL Workbench, Excel, Power BI Desktop
 
 ## Author
 Vanshika
-LinkedIn: [add your LinkedIn link here]
