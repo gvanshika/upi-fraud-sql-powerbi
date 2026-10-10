@@ -1,58 +1,58 @@
-# UPI Fraud SQL Project - Notes (Day 1 and Day 2)
+# UPI Fraud SQL Project - Notes (Day 1 to Day 7)
 
 Date: 04-10-2026
-Tool: MySQL Workbench | Database: `upi\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_fraud` | Table: `transactions`
+Tool: MySQL Workbench | Database: `upi_fraud` | Table: `transactions`
 
-\---
+---
 
 ## Day 1 - Setup and data load
 
 **Dataset**
 
 * Name: PaySim, "Synthetic Financial Datasets For Fraud Detection" (Kaggle)
-* File: `PS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_20174392719\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_1491204439457\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_log.csv` (about 482 MB)
-* Saved in: `upi-fraud-sql-project/Data/`
+* File: `PS_20174392719_1491204439457_log.csv` (about 482 MB)
+* Saved in: `upi-fraud-sql-projectData`
 
 **Table structure (11 columns)**
 
 |Column|Type|Meaning|
 |-|-|-|
 |step|INT|1 step = 1 hour (30 days in total)|
-|type|VARCHAR(20)|PAYMENT, TRANSFER, CASH\_OUT, CASH\_IN, DEBIT|
+|type|VARCHAR(20)|PAYMENT, TRANSFER, CASH_OUT, CASH_IN, DEBIT|
 |amount|DECIMAL(14,2)|Transaction amount|
-|name\_orig / name\_dest|VARCHAR(20)|Sender / receiver|
-|oldbalance\_org, newbalance\_orig|DECIMAL(14,2)|Sender balance before / after|
-|oldbalance\_dest, newbalance\_dest|DECIMAL(14,2)|Receiver balance before / after|
-|is\_fraud|SMALLINT|1 = fraud, 0 = genuine|
-|is\_flagged\_fraud|SMALLINT|1 = the dataset's own system flagged it|
+|name_orig  name_dest|VARCHAR(20)|Sender  receiver|
+|oldbalance_org, newbalance_orig|DECIMAL(14,2)|Sender balance before  after|
+|oldbalance_dest, newbalance_dest|DECIMAL(14,2)|Receiver balance before  after|
+|is_fraud|SMALLINT|1 = fraud, 0 = genuine|
+|is_flagged_fraud|SMALLINT|1 = the dataset's own system flagged it|
 
 **Load result**
 
-* Method: `LOAD DATA LOCAL INFILE` (needed `OPT\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_LOCAL\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_INFILE=1` in the connection and `SET GLOBAL local\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_infile = 1`)
+* Method: `LOAD DATA LOCAL INFILE` (needed `OPT_LOCAL_INFILE=1` in the connection and `SET GLOBAL local_infile = 1`)
 * Rows loaded: **6,362,620**
 * Skipped: 0 | Warnings: 0 | Time: about 104 seconds
 
 **First finding**
 
 * Total fraud: **8,213** (about 0.13% of all transactions)
-* Fraud happens only in TRANSFER (4,097) and CASH\_OUT (4,116)
-* PAYMENT, CASH\_IN and DEBIT have zero fraud
+* Fraud happens only in TRANSFER (4,097) and CASH_OUT (4,116)
+* PAYMENT, CASH_IN and DEBIT have zero fraud
 
-\---
+---
 
 ## Day 2 - Exploring the data
 
-### 1\. Fraud rate by type (TRANSFER and CASH\_OUT only)
+### 1. Fraud rate by type (TRANSFER and CASH_OUT only)
 
 |Type|Total transactions|Fraud|Fraud rate|
 |-|-|-|-|
 |TRANSFER|532,909|4,097|0.77%|
-|CASH\_OUT|2,237,500|4,116|0.18%|
+|CASH_OUT|2,237,500|4,116|0.18%|
 
-* Fraud counts are almost equal, but TRANSFER's fraud rate is about **4x higher** than CASH\_OUT's.
-* CASH\_OUT has about 4x more transactions, so fraud is spread thinner there.
+* Fraud counts are almost equal, but TRANSFER's fraud rate is about **4x higher** than CASH_OUT's.
+* CASH_OUT has about 4x more transactions, so fraud is spread thinner there.
 
-### 2\. Fraud vs genuine amounts (TRANSFER and CASH\_OUT only)
+### 2. Fraud vs genuine amounts (TRANSFER and CASH_OUT only)
 
 ||Transactions|Average amount|Max amount|
 |-|-|-|-|
@@ -63,9 +63,9 @@ Tool: MySQL Workbench | Database: `upi\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_fraud` | T
 * Fraud max is exactly 10,000,000, which looks like a cap in the data. Genuine goes much higher.
 * So a simple "big amount = fraud" rule would raise many false alarms.
 
-### 3\. Existing system flag vs actual fraud
+### 3. Existing system flag vs actual fraud
 
-|is\_flagged\_fraud|is\_fraud|Rows|Meaning|
+|is_flagged_fraud|is_fraud|Rows|Meaning|
 |-|-|-|-|
 |0|0|6,354,407|Genuine, not flagged|
 |0|1|8,197|Fraud, system missed it|
@@ -75,18 +75,18 @@ Tool: MySQL Workbench | Database: `upi\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_fraud` | T
 * System missed **8,197** (about 99.81%).
 * No genuine transaction was flagged (no row with flagged = 1 and fraud = 0).
 
-### 4\. Basic checks (fill in from your Workbench results)
+### 4. Basic checks (fill in from your Workbench results)
 
-* Transaction count by type: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
-* Step range (min to max): \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
-* Rows with NULL in amount or type: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+* Transaction count by type: ______________________
+* Step range (min to max): ______________________
+* Rows with NULL in amount or type: ______________________
 
-\---
+---
 
 ## Key findings so far
 
 1. Fraud is rare: 8,213 out of 6,362,620 (about 0.13%).
-2. Fraud exists only in TRANSFER and CASH\_OUT.
+2. Fraud exists only in TRANSFER and CASH_OUT.
 3. TRANSFER is riskier per transaction (0.77% vs 0.18%).
 4. Fraud amounts are much larger on average (about 4.7x), but amount alone cannot separate fraud from genuine.
 5. The existing flag system is very weak: it caught only 16 of 8,213 frauds.
@@ -99,19 +99,19 @@ Tool: MySQL Workbench | Database: `upi\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_fraud` | T
 
 ## Queries used
 
-Saved in `day2\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_exploration.sql`. Run them one at a time with Ctrl + Enter.
+Saved in `day2_exploration.sql`. Run them one at a time with Ctrl + Enter.
 
 
 
-\---
+---
 
 
 
-\## Day 3 - Fraud patterns
+## Day 3 - Fraud patterns
 
 
 
-\### 1. Account emptied (newbalance\_orig = 0), TRANSFER and CASH\_OUT only
+### 1. Account emptied (newbalance_orig = 0), TRANSFER and CASH_OUT only
 
 | | Total | Emptied | Percent |
 
@@ -121,11 +121,11 @@ Saved in `day2\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_exploration.sql`. Run them one at 
 
 | Genuine | 2,762,196 | 2,488,603 | 90.10% |
 
-\- Not a strong signal alone, because 90% of genuine transactions also end with balance 0.
+- Not a strong signal alone, because 90% of genuine transactions also end with balance 0.
 
 
 
-\### 2. Full balance withdrawn in one go (amount = oldbalance\_org)
+### 2. Full balance withdrawn in one go (amount = oldbalance_org)
 
 | | Total | Full balance | Percent |
 
@@ -135,59 +135,59 @@ Saved in `day2\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\_exploration.sql`. Run them one at 
 
 | Genuine | 2,762,196 | 0 | 0.00% |
 
-\- Very strong signal: almost all fraud empties the account in one transaction, and no genuine transaction does.
+- Very strong signal: almost all fraud empties the account in one transaction, and no genuine transaction does.
 
 
 
-\### 3. First rule test
+### 3. First rule test
 
-Rule: type is TRANSFER or CASH\_OUT, amount = oldbalance\_org, and oldbalance\_org > 0.
+Rule: type is TRANSFER or CASH_OUT, amount = oldbalance_org, and oldbalance_org > 0.
 
-\- Fraud caught: 8,018 of 8,213 (97.63%)
+- Fraud caught: 8,018 of 8,213 (97.63%)
 
-\- False alarms (genuine flagged): 0
+- False alarms (genuine flagged): 0
 
-\- Fraud still missed: 195
+- Fraud still missed: 195
 
-\- Old system caught only 16, so this is a big improvement.
+- Old system caught only 16, so this is a big improvement.
 
-\- Caution: this is synthetic data, so a result this clean is unlikely on real data.
-
-
-
-\### 4. Fraud by hour of day (step MOD 24)
-
-\- Fraud count is roughly equal every hour (about 320-375 per hour in hours 6 to 17).
-
-\- Fraud rate is much higher when genuine traffic is low: hour 6 = 10.47%, hours 9 to 17 = about 0.07-0.12%.
-
-\- Hours 0-5 and 18-23: 0.42% to 22.30% and 0.06% to 0.23%
-
-\- Only an observation, not a firm rule (the data is synthetic).
+- Caution: this is synthetic data, so a result this clean is unlikely on real data.
 
 
 
-\## Day 3 key findings
+### 4. Fraud by hour of day (step MOD 24)
 
-1\. Fraud almost always withdraws the full balance in one transaction.
+- Fraud count is roughly equal every hour (about 320-375 per hour in hours 6 to 17).
 
-2\. A simple rule based on this caught 97.63% of fraud with 0 false alarms.
+- Fraud rate is much higher when genuine traffic is low: hour 6 = 10.47%, hours 9 to 17 = about 0.07-0.12%.
 
-3\. 195 fraud cases are still missed and need a closer look.
+- Hours 0-5 and 18-23: 0.42% to 22.30% and 0.06% to 0.23%
 
-
-
-
-
-\---
+- Only an observation, not a firm rule (the data is synthetic).
 
 
 
-\## Day 4 - The 195 frauds the rule missed
+## Day 3 key findings
+
+1. Fraud almost always withdraws the full balance in one transaction.
+
+2. A simple rule based on this caught 97.63% of fraud with 0 false alarms.
+
+3. 195 fraud cases are still missed and need a closer look.
 
 
 
-\### 1. Pattern of the missed frauds
+
+
+---
+
+
+
+## Day 4 - The 195 frauds the rule missed
+
+
+
+### 1. Pattern of the missed frauds
 
 | Pattern | Rows |
 
@@ -203,11 +203,11 @@ Rule: type is TRANSFER or CASH\_OUT, amount = oldbalance\_org, and oldbalance\_o
 
 
 
-\- Biggest group is partial withdrawal (about 77% of the 195).
+- Biggest group is partial withdrawal (about 77% of the 195).
 
 
 
-\### 2. Money caught vs missed by the first rule
+### 2. Money caught vs missed by the first rule
 
 | | Fraud txns | Total amount | Average amount |
 
@@ -219,27 +219,27 @@ Rule: type is TRANSFER or CASH\_OUT, amount = oldbalance\_org, and oldbalance\_o
 
 
 
-\- Rule caught 97.63% of fraud by count and about 87.74% by value.
+- Rule caught 97.63% of fraud by count and about 87.74% by value.
 
-\- Missed frauds are only 2.4% by count but about 12.26% by value.
+- Missed frauds are only 2.4% by count but about 12.26% by value.
 
-\- Missed frauds have an average amount about 5.7x higher than caught ones.
+- Missed frauds have an average amount about 5.7x higher than caught ones.
 
-\- Some missed frauds have amount exactly 10,000,000 (possible cap, not yet confirmed).
-
-
+- Some missed frauds have amount exactly 10,000,000 (possible cap, not yet confirmed).
 
 
 
-\---
+
+
+---
 
 
 
-\## Day 5 - Rule 2 and the 1 crore cap
+## Day 5 - Rule 2 and the 1 crore cap
 
 
 
-\### 1. Cap test (fraud TRANSFERs only)
+### 1. Cap test (fraud TRANSFERs only)
 
 | Sender balance | Fraud txns | Exactly 10,000,000 | Max amount |
 
@@ -249,23 +249,23 @@ Rule: type is TRANSFER or CASH\_OUT, amount = oldbalance\_org, and oldbalance\_o
 
 | Above 10,000,000 | 148 | 145 | 10,000,000.00 |
 
-\- A single TRANSFER seems to be capped at 10,000,000, so fraudsters with larger balances could not withdraw the full balance. Rule 1 missed these 145.
+- A single TRANSFER seems to be capped at 10,000,000, so fraudsters with larger balances could not withdraw the full balance. Rule 1 missed these 145.
 
 
 
-\### 2. Rule 2
+### 2. Rule 2
 
-Rule: type is TRANSFER or CASH\_OUT, and (amount = oldbalance\_org with oldbalance\_org > 0, OR a TRANSFER of exactly 10,000,000 from a balance above 10,000,000).
+Rule: type is TRANSFER or CASH_OUT, and (amount = oldbalance_org with oldbalance_org > 0, OR a TRANSFER of exactly 10,000,000 from a balance above 10,000,000).
 
-\- Fraud caught: 8,163 of 8,213 (99.39%)
+- Fraud caught: 8,163 of 8,213 (99.39%)
 
-\- False alarms: 0
+- False alarms: 0
 
-\- Fraud missed: 50 (CASH\_OUT 41, TRANSFER 9)
+- Fraud missed: 50 (CASH_OUT 41, TRANSFER 9)
 
 
 
-\### 3. Money view
+### 3. Money view
 
 | | Fraud txns | Total amount | Average amount |
 
@@ -275,7 +275,7 @@ Rule: type is TRANSFER or CASH\_OUT, and (amount = oldbalance\_org with oldbalan
 
 | Missed by rule 2 | 50 | 28,531,787.83 | 570,635.76 |
 
-\- Rule 2 catches about 99.76% of fraud by value. The missed 50 are only about 0.24% by value.
+- Rule 2 catches about 99.76% of fraud by value. The missed 50 are only about 0.24% by value.
 
 
 
@@ -295,19 +295,19 @@ Rule: type is TRANSFER or CASH\_OUT, and (amount = oldbalance\_org with oldbalan
 
 | Amount more than sender's balance | 4 |
 
-| \*\*Total\*\* | \*\*50\*\* |
+| **Total** | **50** |
 
 
 
-\- Two sampled TRANSFERs look odd: the sender's balance did not change after the transaction, and oldbalance\_org equals amount + 10,000,000.
+- Two sampled TRANSFERs look odd: the sender's balance did not change after the transaction, and oldbalance_org equals amount + 10,000,000.
 
-\- These are the hardest cases: none of them has the clear "full balance" or "10,000,000 cap" signal.
-
-
+- These are the hardest cases: none of them has the clear "full balance" or "10,000,000 cap" signal.
 
 
 
-\### 5. Comparison
+
+
+### 5. Comparison
 
 | | Caught by count | Missed |
 
@@ -321,7 +321,7 @@ Rule: type is TRANSFER or CASH\_OUT, and (amount = oldbalance\_org with oldbalan
 
 
 
-\### Limitation
+### Limitation
 
 The rule was designed by looking at the same data it was tested on, so the result is optimistic. It needs testing on fresh data. The dataset is also synthetic.
 
@@ -329,19 +329,19 @@ The rule was designed by looking at the same data it was tested on, so the resul
 
 
 
-\---
+---
 
 
 
-\---
+---
 
 
 
-\## Day 6 - Evaluating the rules
+## Day 6 - Evaluating the rules
 
 
 
-\### 1. Rule 2 report card (all 6,362,620 transactions)
+### 1. Rule 2 report card (all 6,362,620 transactions)
 
 | Flagged by rule | Actual fraud | Transactions | Meaning |
 
@@ -357,13 +357,13 @@ The rule was designed by looking at the same data it was tested on, so the resul
 
 
 
-\- Zero false alarms. Recall 99.39% (8,163 / 8,213), precision 100%.
+- Zero false alarms. Recall 99.39% (8,163  8,213), precision 100%.
 
 
 
-\### 2. Comparison rule: "big amount = fraud"
+### 2. Comparison rule: "big amount = fraud"
 
-Rule: TRANSFER or CASH\_OUT with amount > 1,000,000.
+Rule: TRANSFER or CASH_OUT with amount > 1,000,000.
 
 | Flagged | Actual fraud | Transactions |
 
@@ -379,23 +379,23 @@ Rule: TRANSFER or CASH\_OUT with amount > 1,000,000.
 
 
 
-\- 130,507 alerts, only 2,706 were real fraud. Precision 2.07%, recall 32.95%.
+- 130,507 alerts, only 2,706 were real fraud. Precision 2.07%, recall 32.95%.
 
-\- By value it still catches 86.76% of fraud value, because fraudsters move large amounts. The weakness is the number of false alarms.
-
-
-
-\### 3. Old system, by value
-
-\- Flagged: 16 fraud transactions, value 77,785,563.69
-
-\- Not flagged: 8,197 fraud transactions, value 11,978,629,864.15
-
-\- Old system caught about 0.19% of fraud by count and about 0.65% by value.
+- By value it still catches 86.76% of fraud value, because fraudsters move large amounts. The weakness is the number of false alarms.
 
 
 
-\### 4. All three rules side by side
+### 3. Old system, by value
+
+- Flagged: 16 fraud transactions, value 77,785,563.69
+
+- Not flagged: 8,197 fraud transactions, value 11,978,629,864.15
+
+- Old system caught about 0.19% of fraud by count and about 0.65% by value.
+
+
+
+### 4. All three rules side by side
 
 | | Alerts | Fraud caught | False alarms | Recall | Precision | Value caught |
 
@@ -409,35 +409,35 @@ Rule: TRANSFER or CASH\_OUT with amount > 1,000,000.
 
 
 
-Net benefit (assumed review cost of 1,000 per alert, see day6\_rule\_comparison.xlsx):
+Net benefit (assumed review cost of 1,000 per alert, see day6_rule_comparison.xlsx):
 
-\- Old system: 77,769,563.69
+- Old system: 77,769,563.69
 
-\- Big amount rule: 10,330,215,308.95
+- Big amount rule: 10,330,215,308.95
 
-\- Rule 2: 12,019,720,640.01
-
-
-
-\### 5. Why the balance rule beats the amount rule
-
-\- The balance rule looks at behaviour (the account is drained in one go), which almost only fraud does.
-
-\- The amount rule also catches many large genuine transactions, so reviewers would face over 127,000 false alerts.
-
-\- Rule 2 needs 8,163 reviews and every one is real fraud.
+- Rule 2: 12,019,720,640.01
 
 
 
-\### Assumptions and limitations
+### 5. Why the balance rule beats the amount rule
 
-\- Review cost of 1,000 per alert is an assumption, not a real figure. The dataset has no currency.
+- The balance rule looks at behaviour (the account is drained in one go), which almost only fraud does.
 
-\- Net benefit assumes all caught fraud value is saved, which is a simplification.
+- The amount rule also catches many large genuine transactions, so reviewers would face over 127,000 false alerts.
 
-\- Rule 2 was designed on the same data it is tested on, so results are optimistic.
+- Rule 2 needs 8,163 reviews and every one is real fraud.
 
-\- The data is synthetic, so zero false alarms is unlikely on real data.
+
+
+### Assumptions and limitations
+
+- Review cost of 1,000 per alert is an assumption, not a real figure. The dataset has no currency.
+
+- Net benefit assumes all caught fraud value is saved, which is a simplification.
+
+- Rule 2 was designed on the same data it is tested on, so results are optimistic.
+
+- The data is synthetic, so zero false alarms is unlikely on real data.
 
 
 
