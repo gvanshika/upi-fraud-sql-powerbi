@@ -77,9 +77,9 @@ Tool: MySQL Workbench | Database: `upi_fraud` | Table: `transactions`
 
 ### 4. Basic checks (fill in from your Workbench results)
 
-* Transaction count by type: ______________________
-* Step range (min to max): ______________________
-* Rows with NULL in amount or type: ______________________
+* Transaction count by type: CASH_OUT 2,237,500; PAYMENT 2,151,495; CASH_IN 1,399,284; TRANSFER 532,909; DEBIT 41,432
+* Step range (min to max): 1 to 743 
+* Rows with NULL in amount or type: 0
 
 ---
 
@@ -91,11 +91,11 @@ Tool: MySQL Workbench | Database: `upi_fraud` | Table: `transactions`
 4. Fraud amounts are much larger on average (about 4.7x), but amount alone cannot separate fraud from genuine.
 5. The existing flag system is very weak: it caught only 16 of 8,213 frauds.
 
-## Open questions for next days
 
-* Do fraud transactions follow a balance pattern (for example, sender balance going to 0 after the transaction)?
-* Can a better rule catch far more than 16 frauds without flagging too many genuine transactions?
-* Does fraud cluster at particular hours (step)?
+## Open questions (answered in later days)
+- Do fraud transactions follow a balance pattern? Yes: 97.82% of fraud withdraws the full balance in one go (Day 3).
+- Can a better rule catch far more than 16 frauds? Yes: Rule 2 catches 99.39% with no false alarms (Day 5).
+- Does fraud cluster at particular hours? The fraud count is steady across hours, but the fraud rate is higher when genuine traffic is low (Day 3).
 
 ## Queries used
 
@@ -113,13 +113,7 @@ Saved in `day2_exploration.sql`. Run them one at a time with Ctrl + Enter.
 
 ### 1. Account emptied (newbalance_orig = 0), TRANSFER and CASH_OUT only
 
-| | Total | Emptied | Percent |
-
-|---|---|---|---|
-
-| Fraud | 8,213 | 8,053 | 98.05% |
-
-| Genuine | 2,762,196 | 2,488,603 | 90.10% |
+| | Total | Emptied | Percent ||---|---|---|---|| Fraud | 8,213 | 8,053 | 98.05% || Genuine | 2,762,196 | 2,488,603 | 90.10% |
 
 - Not a strong signal alone, because 90% of genuine transactions also end with balance 0.
 
@@ -127,13 +121,7 @@ Saved in `day2_exploration.sql`. Run them one at a time with Ctrl + Enter.
 
 ### 2. Full balance withdrawn in one go (amount = oldbalance_org)
 
-| | Total | Full balance | Percent |
-
-|---|---|---|---|
-
-| Fraud | 8,213 | 8,034 | 97.82% |
-
-| Genuine | 2,762,196 | 0 | 0.00% |
+| | Total | Full balance | Percent ||---|---|---|---|| Fraud | 8,213 | 8,034 | 97.82% || Genuine | 2,762,196 | 0 | 0.00% |
 
 - Very strong signal: almost all fraud empties the account in one transaction, and no genuine transaction does.
 
@@ -189,17 +177,7 @@ Rule: type is TRANSFER or CASH_OUT, amount = oldbalance_org, and oldbalance_org 
 
 ### 1. Pattern of the missed frauds
 
-| Pattern | Rows |
-
-|---|---|
-
-| Partial withdrawal | 150 |
-
-| Sender balance was 0 | 25 |
-
-| Amount more than balance | 4 |
-
-| Zero amount | 16 |
+| Pattern | Rows ||---|---|| Partial withdrawal | 150 || Sender balance was 0 | 25 || Amount more than balance | 4 || Zero amount | 16 |
 
 
 
@@ -209,13 +187,7 @@ Rule: type is TRANSFER or CASH_OUT, amount = oldbalance_org, and oldbalance_org 
 
 ### 2. Money caught vs missed by the first rule
 
-| | Fraud txns | Total amount | Average amount |
-
-|---|---|---|---|
-
-| Caught | 8,018 | 10,577,883,640.01 | 1,319,267.10 |
-
-| Missed | 195 | 1,478,531,787.83 | 7,582,214.30 |
+| | Fraud txns | Total amount | Average amount ||---|---|---|---|| Caught | 8,018 | 10,577,883,640.01 | 1,319,267.10 || Missed | 195 | 1,478,531,787.83 | 7,582,214.30 |
 
 
 
@@ -241,13 +213,7 @@ Rule: type is TRANSFER or CASH_OUT, amount = oldbalance_org, and oldbalance_org 
 
 ### 1. Cap test (fraud TRANSFERs only)
 
-| Sender balance | Fraud txns | Exactly 10,000,000 | Max amount |
-
-|---|---|---|---|
-
-| Up to 10,000,000 | 3,949 | 0 | 9,996,886.64 |
-
-| Above 10,000,000 | 148 | 145 | 10,000,000.00 |
+| Sender balance | Fraud txns | Exactly 10,000,000 | Max amount ||---|---|---|---|| Up to 10,000,000 | 3,949 | 0 | 9,996,886.64 || Above 10,000,000 | 148 | 145 | 10,000,000.00 |
 
 - A single TRANSFER seems to be capped at 10,000,000, so fraudsters with larger balances could not withdraw the full balance. Rule 1 missed these 145.
 
@@ -267,13 +233,7 @@ Rule: type is TRANSFER or CASH_OUT, and (amount = oldbalance_org with oldbalance
 
 ### 3. Money view
 
-| | Fraud txns | Total amount | Average amount |
-
-|---|---|---|---|
-
-| Caught by rule 2 | 8,163 | 12,027,883,640.01 | 1,473,463.63 |
-
-| Missed by rule 2 | 50 | 28,531,787.83 | 570,635.76 |
+| | Fraud txns | Total amount | Average amount ||---|---|---|---|| Caught by rule 2 | 8,163 | 12,027,883,640.01 | 1,473,463.63 || Missed by rule 2 | 50 | 28,531,787.83 | 570,635.76 |
 
 - Rule 2 catches about 99.76% of fraud by value. The missed 50 are only about 0.24% by value.
 
@@ -283,19 +243,7 @@ Rule: type is TRANSFER or CASH_OUT, and (amount = oldbalance_org with oldbalance
 
 &#x20;### 4. What the remaining 50 look like
 
-| Pattern | Fraud txns |
-
-|---|---|
-
-| Sender balance was 0 | 25 |
-
-| Amount is 0 | 16 |
-
-| Partial withdrawal | 5 |
-
-| Amount more than sender's balance | 4 |
-
-| **Total** | **50** |
+| Pattern | Fraud txns ||---|---|| Sender balance was 0 | 25 || Amount is 0 | 16 || Partial withdrawal | 5 || Amount more than sender's balance | 4 || **Total** | **50** |
 
 
 
@@ -309,15 +257,7 @@ Rule: type is TRANSFER or CASH_OUT, and (amount = oldbalance_org with oldbalance
 
 ### 5. Comparison
 
-| | Caught by count | Missed |
-
-|---|---|---|
-
-| Old system | 0.19% (16) | 8,197 |
-
-| Rule 1 | 97.63% (8,018) | 195 |
-
-| Rule 2 | 99.39% (8,163) | 50 |
+| | Caught by count | Missed ||---|---|---|| Old system | 0.19% (16) | 8,197 || Rule 1 | 97.63% (8,018) | 195 || Rule 2 | 99.39% (8,163) | 50 |
 
 
 
@@ -343,17 +283,7 @@ The rule was designed by looking at the same data it was tested on, so the resul
 
 ### 1. Rule 2 report card (all 6,362,620 transactions)
 
-| Flagged by rule | Actual fraud | Transactions | Meaning |
-
-|---|---|---|---|
-
-| 0 | 0 | 6,354,407 | Genuine, not flagged (correct) |
-
-| 1 | 1 | 8,163 | Fraud, flagged (caught) |
-
-| 0 | 1 | 50 | Fraud, not flagged (missed) |
-
-| 1 | 0 | none | Genuine flagged by mistake (false alarm) |
+| Flagged by rule | Actual fraud | Transactions | Meaning ||---|---|---|---|| 0 | 0 | 6,354,407 | Genuine, not flagged (correct) || 1 | 1 | 8,163 | Fraud, flagged (caught) || 0 | 1 | 50 | Fraud, not flagged (missed) || 1 | 0 | none | Genuine flagged by mistake (false alarm) |
 
 
 
@@ -365,17 +295,7 @@ The rule was designed by looking at the same data it was tested on, so the resul
 
 Rule: TRANSFER or CASH_OUT with amount > 1,000,000.
 
-| Flagged | Actual fraud | Transactions |
-
-|---|---|---|
-
-| 1 | 1 | 2,706 |
-
-| 1 | 0 | 127,801 (false alarms) |
-
-| 0 | 1 | 5,507 (missed) |
-
-| 0 | 0 | 6,226,606 |
+| Flagged | Actual fraud | Transactions ||---|---|---|| 1 | 1 | 2,706 || 1 | 0 | 127,801 (false alarms) || 0 | 1 | 5,507 (missed) || 0 | 0 | 6,226,606 |
 
 
 
@@ -397,15 +317,7 @@ Rule: TRANSFER or CASH_OUT with amount > 1,000,000.
 
 ### 4. All three rules side by side
 
-| | Alerts | Fraud caught | False alarms | Recall | Precision | Value caught |
-
-|---|---|---|---|---|---|---|
-
-| Old system | 16 | 16 | 0 | 0.19% | 100% | 0.65% |
-
-| Big amount rule | 130,507 | 2,706 | 127,801 | 32.95% | 2.07% | 86.76% |
-
-| Rule 2 | 8,163 | 8,163 | 0 | 99.39% | 100% | 99.76% |
+| | Alerts | Fraud caught | False alarms | Recall | Precision | Value caught ||---|---|---|---|---|---|---|| Old system | 16 | 16 | 0 | 0.19% | 100% | 0.65% || Big amount rule | 130,507 | 2,706 | 127,801 | 32.95% | 2.07% | 86.76% || Rule 2 | 8,163 | 8,163 | 0 | 99.39% | 100% | 99.76% |
 
 
 
