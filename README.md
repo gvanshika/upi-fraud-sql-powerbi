@@ -6,7 +6,7 @@ happens and to design a simple rule that flags it. Built with MySQL, Excel and P
 Note: the data is the PaySim synthetic dataset (a simulation of mobile money transactions),
 not real UPI data.
 
-![Dashboard](power%20bi/dashboard.png)
+![Dashboard](Power%20bi/dashboard.png)
 
 ## Business question
 The existing alarm in the data (is_flagged_fraud) caught almost no fraud. Can a simple,
